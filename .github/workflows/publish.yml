@@ -1,11 +1,12 @@
-name: publish
+name: 'publish'
 
 on:
   push:
     branches:
       - release
 
-# This workflow will trigger on each push to the `release` branch to create or update a GitHub release, build your app, and upload the artifacts to the release.
+# This is the example from the readme.
+# On each push to the `release` branch it will create or update a GitHub release, build your app, and upload the artifacts to the release.
 
 jobs:
   publish-tauri:
@@ -19,7 +20,7 @@ jobs:
             args: '--target aarch64-apple-darwin'
           - platform: 'macos-latest' # for Intel based macs.
             args: '--target x86_64-apple-darwin'
-          - platform: 'ubuntu-22.04'
+          - platform: 'ubuntu-22.04' # for Tauri v1 you could replace this with ubuntu-20.04.
             args: ''
           - platform: 'windows-latest'
             args: ''
@@ -32,11 +33,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: lts/*
-
-      - name: install bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
 
       - name: install Rust stable
         uses: dtolnay/rust-toolchain@stable
@@ -51,84 +47,16 @@ jobs:
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
 
       - name: install frontend dependencies
-        run: bun install
+        run: bun install # change this to npm, pnpm or bun depending on which one you use.
 
       - uses: tauri-apps/tauri-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
         with:
-          tagName: app-v__VERSION__ # the action automatically replaces __VERSION__ with the app version.
+          tagName: app-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
           releaseName: 'App v__VERSION__'
           releaseBody: 'See the assets to download this version and install.'
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
-
-      - name: Upload signatures
-        uses: actions/upload-artifact@v4
-        with:
-          name: signatures-${{ matrix.platform }}-${{ matrix.args }}
-          path: src-tauri/target/**/bundle/**/*.sig
-          if-no-files-found: warn
-          retention-days: 1
-
-  generate-latest-json:
-    needs: publish-tauri
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: setup node
-        uses: actions/setup-node@v4
-        with:
-          node-version: lts/*
-
-      - name: install bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - name: Get version from package.json
-        id: get_version
-        run: |
-          VERSION=$(node -p "require('./package.json').version")
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "tag=app-v$VERSION" >> $GITHUB_OUTPUT
-
-      - name: Download signature artifacts
-        uses: actions/download-artifact@v4
-        with:
-          pattern: signatures-*
-          merge-multiple: true
-          path: signatures
-
-      - name: Organize signatures
-        run: |
-          mkdir -p src-tauri/target/release/bundle
-          # Copy all signature files to the expected location
-          find signatures -name "*.sig" -type f | while read sig; do
-            filename=$(basename "$sig")
-            # Try to preserve some structure or copy with platform identifier
-            cp "$sig" "src-tauri/target/release/bundle/$filename"
-            echo "Copied signature: $filename"
-          done
-          # List all signatures for debugging
-          ls -la src-tauri/target/release/bundle/*.sig || echo "No signatures found"
-
-      - name: Generate latest.json
-        run: |
-          VERSION="${{ steps.get_version.outputs.version }}"
-          TAG="${{ steps.get_version.outputs.tag }}"
-          bun run generate-latest-json "$VERSION" "$TAG"
-
-      - name: Upload latest.json to release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: latest.json
-          tag_name: ${{ steps.get_version.outputs.tag }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
