@@ -3,6 +3,10 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Ripwords/rk-configurator.git"
+  },
   "scripts": {
     "ui:dev": "nuxt dev",
     "ui:generate": "nuxt generate",
@@ -11,7 +15,11 @@
     "build": "tauri build",
     "typecheck": "nuxt typecheck",
     "signer": "bunx tauri signer generate -w ~/.tauri/rk-configurator.key",
-    "generate-latest-json": "node scripts/generate-latest-json.js"
+    "generate-latest-json": "node scripts/generate-latest-json.js",
+    "changelog": "changelogen",
+    "changelog:bump": "changelogen --bump",
+    "changelog:release": "changelogen --release",
+    "changelog:gh": "changelogen gh release"
   },
   "dependencies": {
     "@iconify-json/lucide": "^1.2.82",
