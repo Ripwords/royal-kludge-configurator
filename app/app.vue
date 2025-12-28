@@ -17,6 +17,12 @@ useSeoMeta({
   ogDescription: description,
   twitterCard: "summary_large_image",
 });
+
+const { checkForUpdates } = useUpdater();
+
+onMounted(() => {
+  checkForUpdates();
+});
 </script>
 
 <template>
