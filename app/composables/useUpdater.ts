@@ -105,20 +105,30 @@ export const useUpdater = () => {
               `Downloaded ${downloaded} from ${contentLength} (${percent}%)`
             );
 
-            // Update progress in toast
+            // Update progress in toast (safe - won't affect download if toast is closed)
             if (downloadToast) {
-              toast.update(downloadToast.id, {
-                description: `Downloading version ${update.version}... ${percent}%`,
-              });
+              try {
+                toast.update(downloadToast.id, {
+                  description: `Downloading version ${update.version}... ${percent}%`,
+                });
+              } catch (error) {
+                // Toast was closed by user, continue download in background
+                downloadToast = undefined;
+              }
             }
             break;
           case "Finished":
             console.log("Download finished");
             downloadProgress.value = 100;
             if (downloadToast) {
-              toast.update(downloadToast.id, {
-                description: `Download complete. Installing...`,
-              });
+              try {
+                toast.update(downloadToast.id, {
+                  description: `Download complete. Installing...`,
+                });
+              } catch (error) {
+                // Toast was closed by user, continue in background
+                downloadToast = undefined;
+              }
             }
             break;
         }
@@ -126,9 +136,13 @@ export const useUpdater = () => {
 
       console.log("Update installed");
 
-      // Remove download toast and show success notification
+      // Remove download toast if it still exists (safe - won't affect if already closed)
       if (downloadToast) {
-        toast.remove(downloadToast.id);
+        try {
+          toast.remove(downloadToast.id);
+        } catch (error) {
+          // Toast was already closed, ignore
+        }
       }
 
       // Show toast notification

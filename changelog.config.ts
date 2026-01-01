@@ -19,7 +19,7 @@ export default {
 
   // Tag prefix for releases (matches tauri-action tagName format)
   tags: {
-    prefix: "app-v",
+    prefix: "v",
   },
 
   // Changelog sections
