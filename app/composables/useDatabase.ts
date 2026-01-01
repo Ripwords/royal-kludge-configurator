@@ -23,48 +23,9 @@ async function getDb(): Promise<Database> {
 
 export const useDatabase = () => {
   const initDatabase = async (): Promise<void> => {
-    const database = await getDb();
-    // Migrations are handled by the plugin, but we ensure tables exist
-    await database.execute(`
-      CREATE TABLE IF NOT EXISTS profiles (
-        id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        keyboard_vid INTEGER NOT NULL,
-        keyboard_pid INTEGER NOT NULL,
-        config_json TEXT NOT NULL,
-        created_at INTEGER NOT NULL,
-        updated_at INTEGER NOT NULL
-      )
-    `);
-
-    await database.execute(`
-      CREATE TABLE IF NOT EXISTS keyboard_configs (
-        keyboard_vid INTEGER NOT NULL,
-        keyboard_pid INTEGER NOT NULL,
-        config_json TEXT NOT NULL,
-        selected_profile_id TEXT,
-        updated_at INTEGER NOT NULL,
-        PRIMARY KEY (keyboard_vid, keyboard_pid)
-      )
-    `);
-
-    // Add selected_profile_id column to existing tables if it doesn't exist
-    try {
-      await database.execute(`
-        ALTER TABLE keyboard_configs ADD COLUMN selected_profile_id TEXT
-      `);
-    } catch (e) {
-      // Column already exists, ignore error
-      console.log("selected_profile_id column already exists or error:", e);
-    }
-
-    await database.execute(`
-      CREATE INDEX IF NOT EXISTS idx_profiles_keyboard ON profiles(keyboard_vid, keyboard_pid)
-    `);
-
-    await database.execute(`
-      CREATE INDEX IF NOT EXISTS idx_profiles_updated ON profiles(updated_at)
-    `);
+    // Migrations are handled automatically by the Tauri plugin
+    // Just ensure database connection is established
+    await getDb();
   };
 
   const saveKeyboardConfig = async (

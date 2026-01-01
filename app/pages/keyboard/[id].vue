@@ -58,6 +58,13 @@ const selectedProfileId = ref<string | undefined>(undefined);
 const showProfileModal = ref(false);
 const profileName = ref("");
 const editingProfileId = ref<string | null>(null);
+const showDeleteConfirm = ref(false);
+const profileToDelete = ref<Profile | null>(null);
+
+const deleteConfirmDescription = computed(() => {
+  if (!profileToDelete.value) return "";
+  return `Are you sure you want to delete profile "${profileToDelete.value.name}"? This action cannot be undone.`;
+});
 
 const tabItems = computed(() => {
   const items: Array<{
@@ -84,42 +91,6 @@ const tabItems = computed(() => {
   }
   return items;
 });
-
-const getProfileSummary = (profile: Profile) => {
-  const summary: string[] = [];
-  if (profile.config.light_mode) {
-    const lm = profile.config.light_mode;
-    const modeName =
-      lightModes.value.find((m) => m.value === lm.mode_bit)?.label ||
-      `Mode ${lm.mode_bit}`;
-    summary.push(`Lighting Mode: ${modeName}`);
-    summary.push(
-      `Brightness: ${lm.brightness}/5, Animation: ${lm.animation}/5, Sleep: ${lm.sleep}/5`
-    );
-    if (lm.color && !lm.random_colors) {
-      summary.push(`Color: RGB(${lm.color.r}, ${lm.color.g}, ${lm.color.b})`);
-    }
-    if (lm.random_colors) {
-      summary.push(`Random Colors: Enabled`);
-    }
-    if (lm.custom_colors && lm.custom_colors.length > 0) {
-      summary.push(`Custom Colors: ${lm.custom_colors.length} keys`);
-    }
-  } else {
-    summary.push(`Lighting: Not configured`);
-  }
-  if (profile.config.key_mapping?.mappings) {
-    const count = profile.config.key_mapping.mappings.length;
-    summary.push(
-      `Key Mappings: ${count} key${count !== 1 ? "s" : ""} remapped`
-    );
-  } else {
-    summary.push(`Key Mappings: None`);
-  }
-  return summary;
-};
-
-const expandedProfileId = ref<string | null>(null);
 
 const colorHex = computed({
   get: () => {
@@ -543,32 +514,51 @@ const saveCurrentToSelectedProfile = async () => {
   });
 };
 
-const deleteProfileAction = async (profileId: string) => {
+const deleteProfileAction = (profileId: string) => {
   const profile = profiles.value.find((p) => p.id === profileId);
   if (!profile) return;
 
-  if (!confirm(`Are you sure you want to delete profile "${profile.name}"?`)) {
-    return;
-  }
+  profileToDelete.value = profile;
+  showDeleteConfirm.value = true;
+};
+
+const confirmDeleteProfile = async () => {
+  if (!profileToDelete.value) return;
+
+  const profileId = profileToDelete.value.id;
+  const profileName = profileToDelete.value.name;
+  const wasSelected = selectedProfileId.value === profileId;
 
   await deleteProfile(profileId);
   await loadProfiles();
 
-  if (selectedProfileId.value === profileId) {
-    selectedProfileId.value = undefined;
-    // Clear selected profile from database
-    if (keyboard.value) {
-      await saveSelectedProfile(
-        keyboard.value.id.vid,
-        keyboard.value.id.pid,
-        null
-      );
+  if (wasSelected) {
+    // If there are remaining profiles, select the first one
+    if (profiles.value.length > 0) {
+      const nextProfile = profiles.value[0];
+      if (nextProfile) {
+        selectedProfileId.value = nextProfile.id;
+        await selectProfile(nextProfile.id);
+      }
+    } else {
+      // No profiles remaining, clear selection
+      selectedProfileId.value = undefined;
+      if (keyboard.value) {
+        await saveSelectedProfile(
+          keyboard.value.id.vid,
+          keyboard.value.id.pid,
+          null
+        );
+      }
     }
   }
 
+  showDeleteConfirm.value = false;
+  profileToDelete.value = null;
+
   toast.add({
     title: "Profile Deleted",
-    description: `Profile "${profile.name}" deleted`,
+    description: `Profile "${profileName}" deleted`,
     color: "info",
     icon: "i-lucide-trash-2",
   });
@@ -611,39 +601,27 @@ onMounted(() => {
       <!-- Profiles Section - Compact -->
       <div class="flex items-center gap-2">
         <span class="text-sm font-medium text-muted">Profile:</span>
-        <UDropdownMenu
+        <USelectMenu
+          v-model="selectedProfileId"
+          value-key="id"
           :items="
             profiles.length > 0
               ? profiles.map((p) => ({
                   label: p.name,
-                  slot: p.id,
-                  click: () => selectProfile(p.id),
+                  id: p.id,
                 }))
               : []
           "
+          placeholder="Select profile"
+          size="sm"
+          class="min-w-[150px]"
+          @update:model-value="(value) => value && selectProfile(value)"
         >
-          <UButton
-            :label="
-              selectedProfileId
-                ? profiles.find((p) => p.id === selectedProfileId)?.name ||
-                  'Select profile'
-                : 'Select profile'
-            "
-            trailing-icon="i-lucide-chevron-down"
-            size="sm"
-            variant="outline"
-            class="min-w-[150px] justify-between"
-          />
           <template #item="{ item }">
             <div class="flex items-center justify-between w-full gap-4">
-              <span
-                :class="[
-                  'flex items-center gap-2',
-                  selectedProfileId === item.slot && 'font-semibold',
-                ]"
-              >
+              <span class="flex items-center gap-2">
                 <UIcon
-                  v-if="selectedProfileId === item.slot"
+                  v-if="selectedProfileId === item.id"
                   name="i-lucide-check"
                   class="w-4 h-4"
                 />
@@ -653,7 +631,7 @@ onMounted(() => {
                 <UButton
                   @click.stop="
                     openEditProfileModal(
-                      profiles.find((p) => p.id === item.slot)!
+                      profiles.find((p) => p.id === item.id)!
                     )
                   "
                   icon="i-lucide-edit"
@@ -662,7 +640,7 @@ onMounted(() => {
                   :title="'Rename'"
                 />
                 <UButton
-                  @click.stop="deleteProfileAction(item.slot)"
+                  @click.stop="deleteProfileAction(item.id)"
                   icon="i-lucide-trash-2"
                   size="xs"
                   variant="ghost"
@@ -672,7 +650,7 @@ onMounted(() => {
               </div>
             </div>
           </template>
-        </UDropdownMenu>
+        </USelectMenu>
         <UButton
           v-if="selectedProfileId"
           @click="saveCurrentToSelectedProfile"
@@ -897,6 +875,28 @@ onMounted(() => {
             :disabled="!profileName.trim()"
           >
             {{ editingProfileId ? "Update" : "Create" }}
+          </UButton>
+        </div>
+      </template>
+    </UModal>
+
+    <!-- Delete Profile Confirmation Modal -->
+    <UModal
+      v-model:open="showDeleteConfirm"
+      title="Confirm Delete Profile"
+      :description="deleteConfirmDescription"
+    >
+      <template #footer>
+        <div class="flex justify-end gap-2">
+          <UButton
+            color="neutral"
+            variant="ghost"
+            @click="showDeleteConfirm = false"
+          >
+            Cancel
+          </UButton>
+          <UButton color="error" @click="confirmDeleteProfile">
+            Delete
           </UButton>
         </div>
       </template>
