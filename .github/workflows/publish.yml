@@ -115,7 +115,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: release
           fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: pull latest from release branch
+        run: git pull origin release || true
 
       - name: setup node
         uses: actions/setup-node@v4
@@ -133,6 +138,18 @@ jobs:
       - name: get version from package.json
         id: get_version
         run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+
+      - name: verify CHANGELOG.md exists
+        run: |
+          if [ ! -f CHANGELOG.md ]; then
+            echo "Error: CHANGELOG.md not found. It should have been generated in prepare-release job."
+            echo "Current branch: $(git branch --show-current)"
+            echo "Latest commit: $(git log -1 --oneline)"
+            echo "Listing files in current directory:"
+            ls -la
+            exit 1
+          fi
+          echo "CHANGELOG.md found"
 
       - name: sync changelog to GitHub release
         run: bunx changelogen@latest gh release
