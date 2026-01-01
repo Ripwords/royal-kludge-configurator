@@ -6,7 +6,57 @@ on:
       - release
 
 jobs:
+  prepare-release:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - name: install bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: install frontend dependencies
+        run: bun install
+
+      - name: configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: generate changelog and bump version
+        run: bunx changelogen@latest --bump
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: sync versions across all files
+        run: bun run scripts/release.ts --sync-only
+
+      - name: commit version bump and changelog
+        run: |
+          git add package.json src-tauri/Cargo.toml src-tauri/tauri.conf.json
+          [ -f CHANGELOG.md ] && git add CHANGELOG.md || true
+          git diff --staged --quiet && echo "No changes to commit" || git commit -m "chore: bump version and update changelog"
+          git push || exit 0
+
+      - name: get version from package.json
+        id: get_version
+        run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+
+      - name: output version
+        run: echo "Version bumped to ${{ steps.get_version.outputs.version }}"
+
   publish-tauri:
+    needs: prepare-release
     permissions:
       contents: write
     strategy:
@@ -53,8 +103,36 @@ jobs:
           prerelease: false
           args: ${{ matrix.args }}
 
+  sync-changelog:
+    needs: [prepare-release, publish-tauri]
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - name: install bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: install frontend dependencies
+        run: bun install
+
+      - name: sync changelog to GitHub release
+        run: bunx changelogen@latest gh release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   sync-to-main:
-    needs: publish-tauri
+    needs: [prepare-release, publish-tauri]
     permissions:
       contents: write
     runs-on: ubuntu-latest
