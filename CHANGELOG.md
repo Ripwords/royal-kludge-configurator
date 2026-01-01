@@ -1,6 +1,19 @@
 # Changelog
 
 
+## v0.2.9
+
+[compare changes](https://github.com/Ripwords/rk-configurator/compare/v0.2.7...v0.2.9)
+
+### 🔨 Chores
+
+- Bump version and update changelog ([4d51e97](https://github.com/Ripwords/rk-configurator/commit/4d51e97))
+- Update publish workflow and enhance keyboard profile management ([60c4cfb](https://github.com/Ripwords/rk-configurator/commit/60c4cfb))
+
+### ❤️ Contributors
+
+- JJ <teohjjteoh@gmail.com>
+
 ## v0.2.8
 
 [compare changes](https://github.com/Ripwords/rk-configurator/compare/v0.2.6...v0.2.8)
