@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useKeyboard, type Keyboard } from "~/composables/useKeyboard";
 import { usePermissions } from "~/composables/usePermissions";
+import { useUpdater } from "~/composables/useUpdater";
 import { resolveResource } from "@tauri-apps/api/path";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { openUrl } from "@tauri-apps/plugin-opener";
@@ -12,6 +13,10 @@ const {
   requestInputMonitoring,
   isMacOS,
 } = usePermissions();
+const { availableUpdate, isDownloading, installUpdate, checkForUpdates } =
+  useUpdater();
+const checkingUpdates = ref(false);
+const toast = useToast();
 
 const keyboards = ref<Keyboard[]>([]);
 const loading = ref(false);
@@ -23,6 +28,31 @@ const permissionStatus = ref<{
   allGranted: boolean;
 } | null>(null);
 const requestingPermission = ref(false);
+
+const handleCheckUpdates = async () => {
+  checkingUpdates.value = true;
+  try {
+    const update = await checkForUpdates();
+    if (!update) {
+      toast.add({
+        title: "No Updates Available",
+        description: "You are running the latest version.",
+        color: "success",
+        icon: "i-lucide-check-circle",
+      });
+    }
+  } catch (error) {
+    console.error("Error checking for updates:", error);
+    toast.add({
+      title: "Update Check Failed",
+      description: "Failed to check for updates. Please try again later.",
+      color: "error",
+      icon: "i-lucide-alert-circle",
+    });
+  } finally {
+    checkingUpdates.value = false;
+  }
+};
 
 const requestPermission = async () => {
   requestingPermission.value = true;
@@ -228,10 +258,34 @@ onBeforeMount(async () => {
 
 <template>
   <div class="container mx-auto p-6">
-    <div class="mb-6">
-      <h1 class="text-3xl font-bold mb-2">Royal Kludge Configurator</h1>
-      <p class="text-muted">Configure your Royal Kludge keyboard</p>
+    <div class="mb-6 flex items-start justify-between">
+      <div>
+        <h1 class="text-3xl font-bold mb-2">Royal Kludge Configurator</h1>
+      </div>
     </div>
+
+    <UAlert
+      v-if="availableUpdate"
+      color="primary"
+      variant="soft"
+      title="Update Available"
+      :description="`Version ${availableUpdate.version} is available. Your current version is ${availableUpdate.currentVersion}.`"
+      icon="i-lucide-download"
+      class="mb-4"
+    >
+      <template #actions>
+        <div class="flex gap-2">
+          <UButton
+            @click="installUpdate"
+            :loading="isDownloading"
+            color="primary"
+            icon="i-lucide-download"
+          >
+            {{ isDownloading ? "Downloading..." : "Update Now" }}
+          </UButton>
+        </div>
+      </template>
+    </UAlert>
 
     <UCard v-if="checkingPermissions" class="mb-4">
       <div class="flex items-center justify-center p-8">
@@ -285,33 +339,7 @@ onBeforeMount(async () => {
             >
               Request Permissions
             </UButton>
-            <UButton
-              @click="refreshKeyboards"
-              variant="outline"
-              icon="i-lucide-refresh-cw"
-            >
-              Refresh
-            </UButton>
           </div>
-        </template>
-      </UAlert>
-    </UCard>
-
-    <UCard v-if="error && !loading" class="mb-4">
-      <UAlert
-        color="error"
-        variant="soft"
-        :title="error"
-        icon="i-lucide-alert-circle"
-      >
-        <template #actions>
-          <UButton
-            @click="refreshKeyboards"
-            variant="outline"
-            icon="i-lucide-refresh-cw"
-          >
-            Retry
-          </UButton>
         </template>
       </UAlert>
     </UCard>
