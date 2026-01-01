@@ -15,6 +15,7 @@
     "sql:allow-load",
     "sql:allow-close",
     "process:default",
-    "updater:default"
+    "updater:default",
+    "macos-permissions:default"
   ]
 }

@@ -24,15 +24,14 @@ impl HidManager {
     /// Scan for connected keyboards
     pub fn scan_keyboards(&self) -> Result<Vec<Keyboard>, String> {
         // Refresh HID API to detect newly connected devices
-        // We need to recreate the HidApi to get an updated device list
         let mut api_guard = self.api.lock().unwrap();
         *api_guard = HidApi::new()
             .map_err(|e| format!("Failed to refresh HID API: {}", e))?;
         let api = api_guard;
         
         let resource_dir = get_resource_dir();
-
         let devices = api.device_list();
+        
         let mut keyboards = Vec::new();
         let mut seen_ids = std::collections::HashSet::new();
 
@@ -80,9 +79,8 @@ impl HidManager {
                     seen_ids.insert(usb_id);
                     keyboards.push(keyboard);
                 }
-                Err(e) => {
-                    // Log but continue - device might not be supported
-                    eprintln!("Failed to load config for {:04x}:{:04x}: {}", vid, pid, e);
+                Err(_) => {
+                    // Device might not be supported, continue
                 }
             }
         }

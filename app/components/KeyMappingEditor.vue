@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from "vue";
+import { resolveResource } from "@tauri-apps/api/path";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import type {
   Key,
@@ -32,11 +33,15 @@ const imageWidth = ref(0);
 const imageHeight = ref(0);
 const imgElement = ref<HTMLImageElement | null>(null);
 
-const keyboardImagePath = computed(() => {
+const keyboardImagePath = ref<string>("");
+
+onMounted(async () => {
   try {
-    return convertFileSrc(props.keyboard.image_path);
-  } catch {
-    return `asset://localhost/${props.keyboard.image_path}`;
+    const resolvedPath = await resolveResource(props.keyboard.image_path);
+    keyboardImagePath.value = convertFileSrc(resolvedPath);
+  } catch (e) {
+    console.error("Failed to resolve image path:", e);
+    keyboardImagePath.value = `asset://localhost/${props.keyboard.image_path}`;
   }
 });
 

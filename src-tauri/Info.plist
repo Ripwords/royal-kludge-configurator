@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>NSAccessibilityUsageDescription</key>
+	<string>Royal Kludge Configurator needs Accessibility permission to detect and communicate with your keyboard via HID.</string>
+	<key>NSInputMonitoringUsageDescription</key>
+	<string>Royal Kludge Configurator needs Input Monitoring permission to detect keyboard devices and configure them.</string>
+</dict>
+</plist>
+

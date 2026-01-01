@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from "vue";
+import { resolveResource } from "@tauri-apps/api/path";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import type { Key, PerKeyColor, RgbColor } from "~/composables/useKeyboard";
 
@@ -35,13 +36,15 @@ const colors = computed({
 
 const selectedKeyIndex = ref<number | null>(null);
 const selectedColorHex = ref("#ffffff");
-const keyboardImagePath = computed(() => {
-  const resourcePath = props.keyboard.image_path;
+const keyboardImagePath = ref<string>("");
+
+onMounted(async () => {
   try {
-    return convertFileSrc(resourcePath);
+    const resolvedPath = await resolveResource(props.keyboard.image_path);
+    keyboardImagePath.value = convertFileSrc(resolvedPath);
   } catch (e) {
-    console.error("Failed to convert image path:", e);
-    return `asset://localhost/${resourcePath}`;
+    console.error("Failed to resolve image path:", e);
+    keyboardImagePath.value = `asset://localhost/${props.keyboard.image_path}`;
   }
 });
 

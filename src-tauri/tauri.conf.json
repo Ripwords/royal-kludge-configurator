@@ -54,6 +54,9 @@
     ],
     "resources": [
       "keyboards/**/*"
-    ]
+    ],
+    "macOS": {
+      "infoPlist": "Info.plist"
+    }
   }
 }

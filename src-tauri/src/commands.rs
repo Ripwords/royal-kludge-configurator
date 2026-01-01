@@ -3,14 +3,17 @@ use crate::models::{Keyboard, KeyboardConfig, Mode};
 use crate::modes::{get_rgb_modes, get_single_color_modes};
 use crate::protocol::build_buffers;
 use std::sync::{Arc, Mutex};
-use tauri::State;
+use tauri::{AppHandle, State};
 
 /// Global HID manager state
 pub type HidManagerState = Arc<Mutex<HidManager>>;
 
 /// Scan for connected keyboards
 #[tauri::command]
-pub fn scan_keyboards(hid_manager: State<'_, HidManagerState>) -> Result<Vec<Keyboard>, String> {
+pub fn scan_keyboards(
+    _app: AppHandle,
+    hid_manager: State<'_, HidManagerState>,
+) -> Result<Vec<Keyboard>, String> {
     let manager = hid_manager.lock().unwrap();
     manager.scan_keyboards()
 }

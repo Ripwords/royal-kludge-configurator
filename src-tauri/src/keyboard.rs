@@ -14,7 +14,7 @@ pub fn load_keyboard_config(
         .join(format!("{:x}", vid))
         .join("configs")
         .join(format!("{:x}.json", pid));
-
+    
     if !config_path.exists() {
         return Err(format!("Config file not found: {}", config_path.display()));
     }
@@ -145,24 +145,49 @@ pub fn matches_unix_device(usage_page: u16, usage: u16) -> bool {
 
 /// Get resource directory path
 pub fn get_resource_dir() -> PathBuf {
-    // In Tauri, resources are bundled and accessible via resource_dir
     // For development, look for keyboards relative to the executable or in src-tauri
     if let Ok(exe_path) = std::env::current_exe() {
         if let Some(exe_dir) = exe_path.parent() {
+            // On macOS, resources are in .app/Contents/Resources
+            #[cfg(target_os = "macos")]
+            {
+                let resources_path = exe_dir.join("..").join("Resources").join("keyboards");
+                if let Ok(canonical) = resources_path.canonicalize() {
+                    if canonical.exists() {
+                        eprintln!("[Resource] Using macOS Resources dir: {}", canonical.display());
+                        return canonical;
+                    }
+                }
+                // Also try .app/Contents/Resources directly
+                let app_resources = exe_dir.join("..").join("Resources");
+                if let Ok(canonical) = app_resources.canonicalize() {
+                    eprintln!("[Resource] Checking macOS Resources: {}", canonical.display());
+                    let keyboards_in_resources = canonical.join("keyboards");
+                    if keyboards_in_resources.exists() {
+                        eprintln!("[Resource] Found keyboards in Resources: {}", keyboards_in_resources.display());
+                        return keyboards_in_resources;
+                    }
+                }
+            }
+            
             // Try relative to executable first (for built app)
             let relative_path = exe_dir.join("keyboards");
             if relative_path.exists() {
+                eprintln!("[Resource] Using relative to exe: {}", relative_path.display());
                 return relative_path;
             }
+            
             // Try in parent directory (for development)
             if let Some(parent) = exe_dir.parent() {
                 let dev_path = parent.join("keyboards");
                 if dev_path.exists() {
+                    eprintln!("[Resource] Using parent dir: {}", dev_path.display());
                     return dev_path;
                 }
                 // Try src-tauri/keyboards (for development)
                 let src_tauri_path = parent.join("src-tauri").join("keyboards");
                 if src_tauri_path.exists() {
+                    eprintln!("[Resource] Using src-tauri dir: {}", src_tauri_path.display());
                     return src_tauri_path;
                 }
             }
@@ -172,14 +197,17 @@ pub fn get_resource_dir() -> PathBuf {
     // Fallback: try current directory or src-tauri/keyboards
     let current_keyboards = PathBuf::from("keyboards");
     if current_keyboards.exists() {
+        eprintln!("[Resource] Using current dir: {}", current_keyboards.display());
         return current_keyboards;
     }
 
     let src_tauri_keyboards = PathBuf::from("src-tauri/keyboards");
     if src_tauri_keyboards.exists() {
+        eprintln!("[Resource] Using src-tauri fallback: {}", src_tauri_keyboards.display());
         return src_tauri_keyboards;
     }
 
     // Last resort: return a path that might work
+    eprintln!("[Resource] WARNING: Could not find keyboards directory, using fallback");
     PathBuf::from("keyboards")
 }

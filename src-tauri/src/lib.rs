@@ -12,7 +12,7 @@ pub fn run() {
     // Initialize HID manager
     let hid_manager = init_hid_manager().expect("Failed to initialize HID manager");
 
-    tauri::Builder::default()
+    let mut builder = tauri::Builder::default()
         .setup(|app| {
             #[cfg(desktop)]
             {
@@ -25,7 +25,14 @@ pub fn run() {
         .plugin(tauri_plugin_sql::Builder::new().build())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_notification::init())
-        .plugin(tauri_plugin_process::init())
+        .plugin(tauri_plugin_process::init());
+
+    #[cfg(target_os = "macos")]
+    {
+        builder = builder.plugin(tauri_plugin_macos_permissions::init());
+    }
+
+    builder
         .plugin(
             tauri_plugin_sql::Builder::default()
                 .add_migrations(
