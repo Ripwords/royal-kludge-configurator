@@ -41,9 +41,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: sync versions across all files
+        run: bun run scripts/release.ts --sync-only
+
       - name: commit version bump and changelog
         run: |
-          git add package.json
+          git add package.json src-tauri/Cargo.toml src-tauri/tauri.conf.json
           [ -f CHANGELOG.md ] && git add CHANGELOG.md || true
           git diff --staged --quiet && echo "No changes to commit" || git commit -m "chore: bump version and update changelog"
           git push || exit 0

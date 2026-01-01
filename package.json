@@ -16,15 +16,17 @@
     "typecheck": "nuxt typecheck",
     "signer": "bunx tauri signer generate -w ~/.tauri/rk-configurator.key",
     "generate-latest-json": "node scripts/generate-latest-json.js",
-    "changelog": "changelogen",
-    "changelog:bump": "changelogen --bump",
-    "changelog:release": "changelogen --release",
-    "changelog:gh": "changelogen gh release",
+    "changelog": "bunx changelogen@latest",
+    "changelog:bump": "bunx changelogen@latest --bump",
+    "changelog:release": "bunx changelogen@latest --release",
+    "changelog:gh": "bunx changelogen@latest gh release",
     "release": "bun run scripts/release.ts",
+    "release:sync": "bun run scripts/release.ts --sync-only",
     "release:patch": "bun run scripts/release.ts --bump patch",
     "release:minor": "bun run scripts/release.ts --bump minor",
     "release:major": "bun run scripts/release.ts --bump major",
-    "release:create": "bun run scripts/release.ts --create-release"
+    "release:create": "bun run scripts/release.ts --create-release",
+    "release:full": "bunx changelogen@latest --bump && bun run scripts/release.ts --sync-only"
   },
   "dependencies": {
     "@iconify-json/lucide": "^1.2.82",

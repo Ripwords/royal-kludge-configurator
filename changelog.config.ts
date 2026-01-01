@@ -1,6 +1,4 @@
-import { defineConfig } from "changelogen";
-
-export default defineConfig({
+export default {
   // Repository configuration
   repo: "Ripwords/rk-configurator",
 
@@ -38,4 +36,4 @@ export default defineConfig({
     chore: { title: "🔨 Chores" },
     revert: { title: "⏪ Reverts" },
   },
-});
+};
