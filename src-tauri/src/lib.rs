@@ -19,12 +19,17 @@ pub fn run() {
                 app.handle()
                     .plugin(tauri_plugin_updater::Builder::new().build())
                     .expect("Failed to initialize updater plugin");
-                
+
                 // Create native window menu
                 use tauri::menu::{MenuBuilder, MenuItem};
                 use tauri::Emitter;
-                
-                // Quit menu item
+
+                // Quit menu item with Cmd+Q accelerator on macOS
+                #[cfg(target_os = "macos")]
+                let quit_accelerator = Some("cmd+q");
+                #[cfg(not(target_os = "macos"))]
+                let quit_accelerator: Option<&str> = None;
+
                 let quit_item = MenuItem::with_id(
                     app,
                     "quit",
@@ -33,9 +38,9 @@ pub fn run() {
                     #[cfg(not(target_os = "macos"))]
                     "Quit",
                     true,
-                    None::<&str>,
+                    quit_accelerator,
                 )?;
-                
+
                 // Check for updates menu item
                 let check_updates_item = MenuItem::with_id(
                     app,
@@ -44,43 +49,44 @@ pub fn run() {
                     true,
                     None::<&str>,
                 )?;
-                
+
                 #[cfg(target_os = "macos")]
                 {
                     // On macOS, add Quit to the app menu (first menu)
-                    let app_menu = tauri::menu::SubmenuBuilder::new(app, "Royal Kludge Configurator")
-                        .item(&quit_item)
-                        .build()?;
-                    
+                    let app_menu =
+                        tauri::menu::SubmenuBuilder::new(app, "Royal Kludge Configurator")
+                            .item(&quit_item)
+                            .build()?;
+
                     let help_menu = tauri::menu::SubmenuBuilder::new(app, "Help")
                         .item(&check_updates_item)
                         .build()?;
-                    
+
                     let menu = MenuBuilder::new(app)
                         .items(&[&app_menu, &help_menu])
                         .build()?;
-                    
+
                     app.set_menu(menu)?;
                 }
-                
+
                 #[cfg(not(target_os = "macos"))]
                 {
                     // On other platforms, add Quit to a File menu
                     let file_menu = tauri::menu::SubmenuBuilder::new(app, "File")
                         .item(&quit_item)
                         .build()?;
-                    
+
                     let help_menu = tauri::menu::SubmenuBuilder::new(app, "Help")
                         .item(&check_updates_item)
                         .build()?;
-                    
+
                     let menu = MenuBuilder::new(app)
                         .items(&[&file_menu, &help_menu])
                         .build()?;
-                    
+
                     app.set_menu(menu)?;
                 }
-                
+
                 // Handle menu events
                 app.on_menu_event(move |app_handle, event| {
                     match event.id().0.as_str() {
