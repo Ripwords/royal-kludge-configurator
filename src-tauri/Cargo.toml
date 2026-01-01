@@ -1,6 +1,6 @@
 [package]
 name = "RoyalKludgeConfigurator"
-version = "0.2.1"
+version = "0.2.2"
 description = "A Tauri App for Royal Kludge keyboards"
 authors = ["Ripwords"]
 edition = "2021"
