@@ -33,6 +33,9 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
+      - name: fetch latest commits
+        run: git fetch origin release --depth=0 || true
+
       - name: generate changelog and bump version
         run: bunx changelogen@latest --bump
         env:
@@ -40,6 +43,14 @@ jobs:
 
       - name: sync versions across all files
         run: bun run scripts/release.ts --sync-only
+
+      - name: fetch latest commits before committing
+        run: git fetch origin release --depth=0 || true
+
+      - name: regenerate changelog with latest commits
+        run: bunx changelogen@latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: commit version bump and changelog
         run: |
@@ -129,6 +140,14 @@ jobs:
 
       - name: install frontend dependencies
         run: bun install
+
+      - name: fetch latest commits
+        run: git fetch origin release --depth=0 || true
+
+      - name: regenerate changelog with latest commits
+        run: bunx changelogen@latest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: sync changelog to GitHub release
         run: bunx changelogen@latest gh release
