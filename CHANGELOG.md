@@ -1,6 +1,22 @@
 # Changelog
 
 
+## v0.2.7
+
+[compare changes](https://github.com/Ripwords/rk-configurator/compare/v0.2.5...v0.2.7)
+
+### 🚀 Features
+
+- Implement update checking and installation functionality ([a077991](https://github.com/Ripwords/rk-configurator/commit/a077991))
+
+### 🔨 Chores
+
+- Bump version and update changelog ([438f08f](https://github.com/Ripwords/rk-configurator/commit/438f08f))
+
+### ❤️ Contributors
+
+- JJ <teohjjteoh@gmail.com>
+
 ## v0.2.6
 
 [compare changes](https://github.com/Ripwords/rk-configurator/compare/v0.2.4...v0.2.6)
