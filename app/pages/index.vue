@@ -4,7 +4,7 @@ import { usePermissions } from "~/composables/usePermissions";
 import { useUpdater } from "~/composables/useUpdater";
 import { resolveResource } from "@tauri-apps/api/path";
 import { convertFileSrc } from "@tauri-apps/api/core";
-import { openUrl } from "@tauri-apps/plugin-opener";
+import { getVersion } from "@tauri-apps/api/app";
 
 const { scanKeyboards } = useKeyboard();
 const {
@@ -28,6 +28,18 @@ const permissionStatus = ref<{
   allGranted: boolean;
 } | null>(null);
 const requestingPermission = ref(false);
+const appVersion = ref<string>("");
+
+// Get app version on mount
+onMounted(async () => {
+  try {
+    appVersion.value = await getVersion();
+  } catch (error) {
+    console.error("Failed to get app version:", error);
+    // Fallback to package.json version if available
+    appVersion.value = "0.2.5";
+  }
+});
 
 const handleCheckUpdates = async () => {
   checkingUpdates.value = true;
@@ -261,6 +273,9 @@ onBeforeMount(async () => {
     <div class="mb-6 flex items-start justify-between">
       <div>
         <h1 class="text-3xl font-bold mb-2">Royal Kludge Configurator</h1>
+        <p v-if="appVersion" class="text-sm text-muted">
+          Version {{ appVersion }}
+        </p>
       </div>
     </div>
 
