@@ -139,17 +139,25 @@ jobs:
         id: get_version
         run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
 
-      - name: verify CHANGELOG.md exists
+      - name: ensure CHANGELOG.md exists
         run: |
           if [ ! -f CHANGELOG.md ]; then
-            echo "Error: CHANGELOG.md not found. It should have been generated in prepare-release job."
-            echo "Current branch: $(git branch --show-current)"
-            echo "Latest commit: $(git log -1 --oneline)"
-            echo "Listing files in current directory:"
-            ls -la
-            exit 1
+            echo "CHANGELOG.md not found. Generating it now..."
+            bunx changelogen@latest
+            if [ ! -f CHANGELOG.md ]; then
+              echo "Error: Failed to generate CHANGELOG.md"
+              echo "Current branch: $(git branch --show-current)"
+              echo "Latest commit: $(git log -1 --oneline)"
+              echo "Listing files in current directory:"
+              ls -la
+              exit 1
+            fi
+            echo "CHANGELOG.md generated successfully"
+          else
+            echo "CHANGELOG.md found"
           fi
-          echo "CHANGELOG.md found"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: sync changelog to GitHub release
         run: bunx changelogen@latest gh release
