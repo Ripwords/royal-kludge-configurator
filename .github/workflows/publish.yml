@@ -41,9 +41,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: sync versions across all files
+        run: bun run scripts/release.ts --sync-only
+
       - name: commit version bump and changelog
         run: |
-          git add package.json
+          git add package.json src-tauri/Cargo.toml src-tauri/tauri.conf.json
           [ -f CHANGELOG.md ] && git add CHANGELOG.md || true
           git diff --staged --quiet && echo "No changes to commit" || git commit -m "chore: bump version and update changelog"
           git push || exit 0
@@ -100,7 +103,7 @@ jobs:
           tagName: app-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
           releaseName: 'rk-configurator v__VERSION__'
           releaseBody: 'See the assets to download this version and install.'
-          releaseDraft: false
+          releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
 
@@ -127,8 +130,21 @@ jobs:
       - name: install frontend dependencies
         run: bun install
 
+      - name: get version from package.json
+        id: get_version
+        run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+
       - name: sync changelog to GitHub release
         run: bunx changelogen@latest gh release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: publish release (mark as latest)
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | gh auth login --with-token
+          gh release edit "app-v${{ steps.get_version.outputs.version }}" \
+            --draft=false \
+            --latest
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
