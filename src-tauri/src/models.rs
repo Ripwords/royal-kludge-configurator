@@ -399,15 +399,6 @@ pub struct Mode {
     pub mode_bit: u8,
 }
 
-/// Profile for saving/loading configurations
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Profile {
-    pub id: String,
-    pub name: String,
-    pub keyboard_id: KeyboardUsbId,
-    pub config: KeyboardConfig,
-}
-
 /// RGB color
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct RgbColor {
