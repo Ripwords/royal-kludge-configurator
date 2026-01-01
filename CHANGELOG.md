@@ -1,6 +1,21 @@
 # Changelog
 
 
+## v0.2.4
+
+[compare changes](https://github.com/Ripwords/rk-configurator/compare/app-v0.2.2...v0.2.4)
+
+### 🔨 Chores
+
+- Enhance GitHub Actions workflow for release preparation and changelog synchronization ([9535f93](https://github.com/Ripwords/rk-configurator/commit/9535f93))
+- Bump RoyalKludgeConfigurator version to 0.2.2 in Cargo.lock ([a9e67b6](https://github.com/Ripwords/rk-configurator/commit/a9e67b6))
+- Bump version and update changelog ([3ea567e](https://github.com/Ripwords/rk-configurator/commit/3ea567e))
+- Update dependencies and implement macOS permissions handling ([7e06f63](https://github.com/Ripwords/rk-configurator/commit/7e06f63))
+
+### ❤️ Contributors
+
+- JJ <teohjjteoh@gmail.com>
+
 ## v0.2.3
 
 [compare changes](https://github.com/Ripwords/rk-configurator/compare/app-v0.2.2...v0.2.3)
