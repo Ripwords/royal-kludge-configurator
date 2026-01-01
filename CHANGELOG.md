@@ -1,6 +1,23 @@
 # Changelog
 
 
+## v0.2.8
+
+[compare changes](https://github.com/Ripwords/rk-configurator/compare/v0.2.6...v0.2.8)
+
+### 🚀 Features
+
+- Display app version on the main page ([4316454](https://github.com/Ripwords/rk-configurator/commit/4316454))
+
+### 🔨 Chores
+
+- Bump version and update changelog ([83d87fe](https://github.com/Ripwords/rk-configurator/commit/83d87fe))
+- Sync from release branch ([c01d16b](https://github.com/Ripwords/rk-configurator/commit/c01d16b))
+
+### ❤️ Contributors
+
+- JJ <teohjjteoh@gmail.com>
+
 ## v0.2.7
 
 [compare changes](https://github.com/Ripwords/rk-configurator/compare/v0.2.5...v0.2.7)
