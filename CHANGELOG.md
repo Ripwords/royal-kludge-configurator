@@ -1,6 +1,24 @@
 # Changelog
 
 
+## v0.2.5
+
+[compare changes](https://github.com/Ripwords/rk-configurator/compare/app-v0.2.3...v0.2.5)
+
+### 🐛 Bug Fixes
+
+- Correct tag format in GitHub Actions workflow for releases ([a827681](https://github.com/Ripwords/rk-configurator/commit/a827681))
+
+### 🔨 Chores
+
+- Bump version and update changelog ([1722866](https://github.com/Ripwords/rk-configurator/commit/1722866))
+- Update GitHub Actions workflow and version bump ([8dd1cef](https://github.com/Ripwords/rk-configurator/commit/8dd1cef))
+- Bump RoyalKludgeConfigurator version to 0.2.4 in Cargo.lock ([d020900](https://github.com/Ripwords/rk-configurator/commit/d020900))
+
+### ❤️ Contributors
+
+- JJ <teohjjteoh@gmail.com>
+
 ## v0.2.4
 
 [compare changes](https://github.com/Ripwords/rk-configurator/compare/app-v0.2.2...v0.2.4)
